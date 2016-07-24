@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Title</title>
+    <meta charset="utf-8">
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body { font-family: 'Droid Serif'; }
+      h1, h2, h3 {
+        font-family: 'Yanone Kaffeesatz';
+        font-weight: normal;
+      }
+      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+    </style>
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+# tutとGitBookとなんとか
+
+---
+
+## 自己紹介
+
+### 私、ScalaMatsuriで転職しました
+
+http://blog.scalamatsuri.org/entry/2015/08/19/123046
+
+この記事に出てくる人物
+
+---
+
+## 実際の発表の前に…
+
+---
+
+## ドワンゴの新入社員Scala研修テキストを公開します
+
+---
+
+## 今、ここで
+
+---
+
+http://dwango.github.io/scala_text/
+
+### CC-BY-NC-SA 3.0です。
+
+---
+
+## このテキストに使われているもの
+
+* tut
+  * Markdown内のScalaコードをコンパイルチェックしたりできるやつ
+* GitBook
+  * 本かけるっぽいやつ
+* textlint
+  * text向けLintツール
+
+---
+
+## sbtとnpm
+
+* sbtのタスクとしてnpmのコマンドを実行
+* 試行錯誤の結果この形式に落ち着いたらしい？
+
+---
+
+## Travis CIによる成果物の自動push
+
+https://github.com/dwango/scala_text/issues/1
+
+このissueからリンクを辿ってください
+
+---
+
+## なぜこれらのツールを使うのか？
+
+* ドキュメントのコード片が常に動作することを機械的に確認したい
+* 楽に複数の形式で出力したい
+* 技術文書を校正したい
+
+---
+
+…ということを、主に作業した方々がおっしゃっていました（！）
+
+---
+
+## というわけで
+
+Scalaのドキュメントを書きましょう
+
+---
+
+## 最後に
+
+公開したテキストに関連する話をアンカンファレンスでやれたらやるかも？
+
+    </textarea>
+    <script src="https://gnab.github.io/remark/downloads/remark-latest.min.js">
+    </script>
+    <script>
+      var slideshow = remark.create();
+    </script>
+  </body>
+</html>
