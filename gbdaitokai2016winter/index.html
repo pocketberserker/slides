@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Scalaのテスティングフレームワークをつくろう</title>
+    <meta charset="utf-8">
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body { font-family: 'Droid Serif'; }
+      h1, h2, h3 {
+        font-family: 'Yanone Kaffeesatz';
+        font-weight: normal;
+      }
+      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+    </style>
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+# Scalaのテスティングフレームワークをつくろう
+
+CC BY-SA 4.0
+
+---
+
+## 自己紹介
+
+![icon](https://camo.githubusercontent.com/5dbd18d5fc15054677aaab64d647c4a076483af4/68747470733a2f2f646c2e64726f70626f7875736572636f6e74656e742e636f6d2f752f35373437383735382f7062736b2e6a7067)
+
+* なかやん・ゆーき / ぺんぎん / もみあげ
+* [@pocketberserker](https://twitter.com/pocketberserker)
+* Microsoft MVP for <del>F#</del> (2013/04/01～ 2017/03/31)
+* 仕事はScalaっぽい
+
+---
+
+## 宣伝?
+
+ScalaMatsuri 2017で発表します
+
+http://2017.scalamatsuri.org/ja/candidates/YukiNakayama_2/
+
+---
+
+## 突然の発表変更理由
+
+* ScalaMatsuriで出していた片方が落ちた
+* けどどうせだしどこかで発表したいな…
+* shapelessはぐぐればだいたいでてくる（？）
+* 別のネタで本日のぽかーん枠を狙おう？
+
+で、変更をpull reqし忘れてましたorz
+
+---
+
+## Scalaユーザはsbtを使う
+
+そういう前提で話します（？）
+
+---
+
+## Scalaわからない？
+
+そんなあなたに[dwango/scala_text](https://github.com/dwango/scala_text)
+
+---
+
+## Scalaにはいくつかのテスティングフレームワークが存在する
+
+* 有名なもの
+  * ScalaTest
+  * Specs2
+  * ScalaCheck
+* Scalajsに対応しているもの
+  * https://www.scala-js.org/libraries/testing.html
+
+とかとか
+
+---
+
+## じゃあなんで自作するの？
+
+仕組みを知っておくと便利じゃないですか？
+
+---
+
+## 以上建前
+
+---
+
+## 本音
+
+* F#で作ってたテスティングフレームワークがモナド則を満たすかどうか検証したい
+* どうせだからScala(z)で作ろう
+
+---
+
+## 成果物
+
+https://github.com/scala-kennel/dog
+
+---
+
+## プロジェクト準備
+
+* coreとrunner用のプロジェクトを用意する
+  * APIとRunnerはわけておくと便利？
+* Runnerプロジェクトに以下の依存を追加
+  * JVM
+    * "org.scala-sbt" % "test-interface" % "1.0"
+    * "org.scalajs" %% "scalajs-stubs" % "scalaJSVersion" % "provided"
+      * こっちはScalajs対応する場合のみ必要
+  * scalajs
+    * "org.scalajs" %% "scalajs-test-interface" % "scalaJSVersion"
+
+---
+
+## test-interface
+
+* sbtからテストライブラリを呼び出すために使うもの
+* ユーザは気にしなくていいらいぶらり
+* https://github.com/sbt/test-interface/tree/v1.0/src/main/java/sbt/testing
+  * 古いソースコードもjar内に残っているらしいので注意
+
+---
+
+## Runnerの実装
+
+最低限実装すべきもの
+
+* Framework
+* Fingerprint
+* Runner
+* Task
+* TaskDef
+* Event
+* Selector
+
+---
+
+### Framework
+
+* フレームワーク名
+* Fingerprint
+* Runner
+
+を指定する
+
+---
+
+## Frameworkはどこで使われる？
+
+```scalajs
+testFrameworks += new TestFramework("dog.DogFramework")
+```
+
+の文字列部分で使っている
+
+---
+
+## Fingerprint
+
+* テスト収集に必要な情報を定義する
+* 二つの子インターフェースがある
+  * AnnotatedFigerprint
+  * SubclassFingerprint
+* マーカーはこいつで指定する
+
+---
+
+## Runner
+
+* TaskDefからTaskを生成
+* 実行完了時に出力する文字列を提供
+
+---
+
+## TaskDef
+
+* タスクを生成するための情報
+* クラス名などがここに入っている
+
+---
+
+## Task
+
+* 実行部分
+* sbt側ではTask#executeくらいしかtry catchされている部分がない？
+  * テストオブジェクトのロードとかもここでやったほうがよい？
+
+---
+
+## Selector
+
+* どういう名前のテストを選択するか
+* といっても私はTestSelectorしか使ったことがない…
+
+---
+
+## Event
+
+* テストのイベント。
+* タスク実行結果やらなんやらを持つ
+* EventHandlerでEventあをsbt側に通知できる
+
+---
+
+## 実行の流れ
+
+1. sbtがFrameworkをnew
+1. FrameworkからRunnerとFingerprint取得
+1. Fingerprintを利用してTaskDef生成
+1. Runnerを使ってTaskDefからTaskを取得
+1. Taskを実行してEventを取得
+
+---
+
+## ここからcore実装の話
+
+ここまでに20分使い切っている可能性…
+
+---
+
+## APIを考える
+
+```scala
+// アサーションは切り替え可能にしたい
+object HogeTest extends Dog with Assert {
+  // valだと1回しか実行しない
+  // TestCase型がテストとしてTaskで収集される
+  val hoge: TestCase = TestCase { ... }
+
+  // defだと呼び出されるたびに実行される
+  def fuga = TestCase { ... }
+}
+```
+
+---
+
+## APIを考える
+
+* テストケースを合成したい
+  * 依存関係を明確にしたい？
+* soft assertion
+  * 今どきのテストはアサーションが可能な限り実行されるらしい？
+  * AssertJとか
+  * 1テストケース1assertは死んだ？
+
+---
+
+## TestCaseの案1
+
+```scala
+case class Kleisli[M[_], A, B](run: A => M[B])
+type TestCase = Kleisli[TestResult, Param, A]
+```
+
+---
+
+## TestCaseの案1
+
+* Kleisliにすることで合成を簡単に
+* だが実行部分がまで依存してしまう
+  * できればこれはcoreにいれたくない
+
+---
+
+### TestCaseの案2
+
+```scala
+sealed abstract class ComposableTest[A] extends Product with Serializable
+final case class Fixture(f: () => Unit) extends ComposableTest[Unit]
+final case class Gosub[A](f: () => TestCaseAp[A] \/ TestCase[A]) extends ComposableTest[A]
+final case class HandleErrors[A](es: IList[Throwable]) extends ComposableTest[A]
+final case class Assertion[A](assert: () => AssertionResult[A]) extends ComposableTest[A]
+```
+
+---
+
+### TestCaseの案2
+
+```scala
+type Config = Endo[Param]
+type Test[A] = Kleisli[TestResult, Config, A]
+type TestAp[A] = Kleisli[ValidationResult, Config, A]
+type TestFixture[A] = LazyTuple2[Config, ComposableTest[A]]
+type TestCase[A] = Free[TestFixture, A]
+type TestCaseAp[A] = FreeAp[TestFixture, A]
+```
+
+日本語でOK
+
+---
+
+## 案2の要約
+
+* FreeやFreeApを使ってDSLを構築
+  * ComposableTestで一部小細工している
+
+---
+
+## 感想
+
+* sbtに組み込むのはわりと楽
+  * Visual Studioとかいう地獄の環境と比較しています
+* Runnerさえどうにかなればあとは楽
+  * どの言語でもRunnerがつらい
+  * 黒魔術を使うしかなくないから
+
+    </textarea>
+    <script src="../remark-0.13.min.js">
+    </script>
+    <script>
+      var slideshow = remark.create();
+    </script>
+  </body>
+</html>
